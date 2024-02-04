@@ -15,8 +15,8 @@ spec:
     - name: imageTag
       value: "latest"
   workspaces:
-    - name: azure-credentials
+    - name: acr-credentials
       secret:
-        secretName: azure-creds
+        secretName: acr-credentials
     - name: source-code
       emptyDir: {}

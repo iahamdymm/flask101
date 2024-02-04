@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: build-and-push-pipeline-run
+spec:
+  pipelineRef:
+    name: build-and-push-pipeline
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: tekton-pipeline-pvc
+  params:
+    - name: GIT_REPO
+      value: "https://github.com/mtahaelmaghrabi/flask101.git"
+    - name: GIT_REVISION
+      value: "main"  # Replace with the desired Git revision (e.g., branch or tag)
+    - name: IMAGE_NAME
+      value: "flask1"  # Replace with your image name
+    - name: IMAGE_TAG
+      value: "latest"  # Replace with your image tag
+    - name: ACR_URL
+      value: "qppacr.azurecr.io"  # Replace with your ACR URL

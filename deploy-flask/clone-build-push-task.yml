@@ -41,6 +41,9 @@ spec:
           
     - name: build
       image: gcr.io/kaniko-project/executor:latest
+      volumeMounts:
+      - name: azure-credentials
+        mountPath: /kaniko/.docker
       args:
         - --dockerfile=$(workspaces.source-code.path)/Dockerfile
         - --context=dir://$(workspaces.source-code.path)
@@ -48,10 +51,16 @@ spec:
         # $(params.imagePath):$(params.imageTag)
         # - --no-push
         # - --cache=true
-
   volumes:
-    - name: docker-socket
-      hostPath:
-        path: /var/run/docker.sock
-    - name: azure-creds
-      emptyDir: {}
+    - name: azure-credentials
+      secret:
+        secretName: acr-credentials
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+  # volumes:
+  #   - name: docker-socket
+  #     hostPath:
+  #       path: /var/run/docker.sock
+  #   - name: azure-creds
+  #     emptyDir: {}

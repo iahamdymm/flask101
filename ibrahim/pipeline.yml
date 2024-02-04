@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-and-push-pipeline
+spec:
+  workspaces:
+    - name: shared-workspace
+  params:
+    - name: GIT_REPO
+      type: string
+      description: "The git repository URL"
+    - name: GIT_REVISION
+      type: string
+      description: "The git revision to checkout (branch, tag, sha, etc.)"
+    - name: IMAGE_NAME
+      type: string
+      description: "Name of the image to push"
+    - name: IMAGE_TAG
+      type: string
+      description: "Tag of the image to push"
+    - name: ACR_URL
+      type: string
+      description: "URL of the Azure Container Registry"
+  tasks:
+    - name: fetch-git-source
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: "$(params.GIT_REPO)"
+        - name: revision
+          value: "$(params.GIT_REVISION)"
+    - name: build-and-push
+      taskRef:
+        name: kaniko-task
+      runAfter:
+        - fetch-git-source
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: IMAGE
+          value: "$(params.ACR_URL)/$(params.IMAGE_NAME):$(params.IMAGE_TAG)"
+        - name: DOCKERFILE
+          value: "$(workspaces.shared-workspace.path)/Dockerfile"
+        - name: CONTEXT
+          value: "$(workspaces.shared-workspace.path)"
