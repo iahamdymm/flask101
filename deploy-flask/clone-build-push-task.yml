@@ -1,0 +1,57 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-and-push-flask-app-acr
+spec:
+  params:
+    - name: gitRepoUrl
+      type: string
+      description: URL of the git repository containing the Flask app
+    - name: acrName
+      type: string
+      description: Azure Container Registry name (without .azurecr.io)
+    - name: imagePath
+      type: string
+      description: Docker image name (including repository)
+    - name: imageTag
+      type: string
+      description: Docker image tag
+  workspaces:
+    - name: azure-credentials
+      description: Workspace to hold Azure credentials
+    - name: source-code
+      description: Workspace where the git repo will be cloned
+  steps:
+    - name: clone
+      image: alpine/git
+      script: |
+        git clone $(params.gitRepoUrl) $(workspaces.source-code.path)
+      workingDir: $(workspaces.source-code.path)
+
+    - name: login-acr
+      image: docker
+      script: |
+        docker login $(params.acrName).azurecr.io --username qppacr --password 87aW5XtFLd3el3TRxQASz0w3nNLx/Hdfb9jWlZ5J1S+ACRAJIGzX
+      volumeMounts:
+        - name: azure-creds
+          mountPath: /azure
+      env:
+        - name: AZURE_CONFIG_DIR
+          value: /azure
+          
+    - name: build
+      image: gcr.io/kaniko-project/executor:latest
+      args:
+        - --dockerfile=$(workspaces.source-code.path)/Dockerfile
+        - --context=dir://$(workspaces.source-code.path)
+        - --destination=qppacr.azurecr.io/flaskapp:latest
+        # $(params.imagePath):$(params.imageTag)
+        # - --no-push
+        # - --cache=true
+
+  volumes:
+    - name: docker-socket
+      hostPath:
+        path: /var/run/docker.sock
+    - name: azure-creds
+      emptyDir: {}

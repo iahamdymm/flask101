@@ -1,0 +1,19 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: flask-pipeline
+spec:
+  tasks:
+    - name: build-and-push-flask-app-acr
+      taskRef:
+        name: clone
+    
+    - name: build-push
+      taskRef:
+        name: kaniko
+      workspaces:
+      - name: source
+        workspace: source-code
+      params:
+      - name: IMAGE
+        value: $(params.imagePath):$(params.imageTag)

@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: build-and-push-flask-app-acr-run
+spec:
+  taskRef:
+    name: build-and-push-flask-app-acr
+  params:
+    - name: gitRepoUrl
+      value: "https://github.com/mtahaelmaghrabi/flask101.git"
+    - name: acrName
+      value: "qppacr"
+    - name: imagePath
+      value: "flaskapp"
+    - name: imageTag
+      value: "latest"
+  workspaces:
+    - name: azure-credentials
+      secret:
+        secretName: azure-creds
+    - name: source-code
+      emptyDir: {}
